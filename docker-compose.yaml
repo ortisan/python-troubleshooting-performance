@@ -1,17 +1,49 @@
 version: '3'
 
 services:
-  localstack:
-    image: 'localstack/localstack:0.13.0'
-    restart: always
-    environment:
-      - AWS_DEFAULT_REGION=sa-east-1
-      - SERVICES=dynamodb
-    ports:
-      - "4566-4599:4566-4599"
-      - "${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}"
-    volumes:
-      - ./aws:/docker-entrypoint-initaws.d
-      - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
+  # localstack:
+  #   image: 'localstack/localstack:0.13.0'
+  #   restart: always
+  #   environment:
+  #     - AWS_DEFAULT_REGION=sa-east-1
+  #     - SERVICES=dynamodb
+  #   ports:
+  #     - "4566-4599:4566-4599"
+  #     - "${PORT_WEB_UI-8080}:${PORT_WEB_UI-8080}"
+  #   volumes:
+  #     - ./aws:/docker-entrypoint-initaws.d
+  #     - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
 
- 
+  mysql:
+    image: mysql:8.0.23
+    # user: "1000:1000"
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: tickdb
+    # volumes:
+      # - ./docker/schema.sql:/docker-entrypoint-initdb.d/1.sql
+    #   - ./docker/volumes/mysql:/var/lib/mysql
+
+  prometheus:
+    image: prom/prometheus
+    # user: "1000:1000"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yaml:/etc/prometheus/prometheus.yaml
+      # - ./docker/volumes/prometheus:/prometheus
+
+  grafana:
+    image: grafana/grafana
+    # user: "1000:1000"
+    ports:
+      - "3000:3000"
+    # volumes:
+    #   - ./docker/volumes/grafana:/var/lib/grafana
+
+  app:
+    build: appfastapi
+    ports:
+      - "8000:8000"

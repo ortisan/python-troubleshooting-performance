@@ -1,40 +1,60 @@
 
-Criacao do ambiente
+# Python Memory Troubleshooting
+
+### Prepare Environment
 
 ```sh
 python3 -m venv  ./.venv
 pip install -r requirements.txt
 docker-compose up --build
-uvicorn main:app --reload
-```
-Run sql script
-
-```sh
-mysql --host=localhost --user=root --password=123456 mydb
-CREATE TABLE `tick` (`id` INTEGER AUTO_INCREMENT NOT NULL PRIMARY KEY, `epoch_timestamp` BIGINT NOT NULL, `symbol` VARCHAR(50) NOT NULL, `value` BIGINT NOT NULL) []
-INSERT INTO tick (`epoch_timestamp`, `symbol`, `value`) VALUES (123456, 'ETH', 1000000);
+# If you need run local
+uvicorn --host 0.0.0.0 --port 80 --workers 5 main:app
 ```
 
-Run performance tests
+Import grafana-dashboard.json into grafana
 
-```sql
-k6 run k6-post-script.js
+![image](images/grafana.png)
+
+
+### Clean docker objects
+
+```sh
+# Delete mysql container
+docker-compose rm mysql
+# Delete files from volumes
+sudo rm -rf docker/volumes/mysql
 ```
 
-TODO documentar o django
+### Run performance tests
+
+[Install k6](https://k6.io/docs/getting-started/installation/)
+
 ```sh
-django-admin startproject app
-cd app
-django-admin startapp ticker
+k6 run k6/k6-get-script.js
+```
+
+### Profile memory
+
 ```sh
+# Find process number
+ps -aux | grep python
+# Top memory functions
+sudo env "PATH=$PATH" py-spy top --pid 126941
+# Flame graph
+sudo env "PATH=$PATH" py-spy record -o images/profile.svg --pid 126941
+```
 
-Create models
-
-python manage.py makemigrations
-python manage.py migrate
-
-GUNICORN_CMD_ARGS="--bind=0.0.0.0:8000 --workers=3 --reload --chdir=ticker/" gunicorn tiker.wsgi
+![image](images/profile.svg)
 
 
+### Links
 
 
+| App         | Url                           | User  | Password |
+|-------------|-------------------------------|-------|----------|
+| prometheus  | http://localhost:9090         |       |          |
+| grafana     | http://localhost:3000         | admin | admin    |
+| app         | http://localhost:80           |       |          |
+| app-docker  | http://localhost:8000         |       |          |
+| app-metrics | http://localhost:8000/metrics |       |          |
+|             |                               |       |          |

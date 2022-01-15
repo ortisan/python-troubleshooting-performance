@@ -9,7 +9,10 @@ from pydantic.utils import GetterDict
 
 import peewee
 
-DATABASE_NAME = "tickdb"
+from config import settings
+
+
+DATABASE_NAME = settings.db_databasename
 db_state_default = {"closed": None, "conn": None, "ctx": None, "transactions": None}
 db_state = ContextVar("db_state", default=db_state_default.copy())
 
@@ -24,12 +27,8 @@ class PeeweeConnectionState(peewee._ConnectionState):
     def __getattr__(self, name):
         return self._state.get()[name]
 
-db = MySQLDatabase(DATABASE_NAME, user='root', password='123456',
-                         host='localhost', port=3306)
-
-db = MySQLDatabase(DATABASE_NAME, user='root', password='123456',
-                         host='mysql', port=3306)
-
+db = MySQLDatabase(DATABASE_NAME, user=settings.db_username, password=settings.db_password,
+                         host=settings.db_host, port=settings.db_port)
 
 db._state = PeeweeConnectionState()
 

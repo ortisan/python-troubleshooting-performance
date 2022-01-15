@@ -16,34 +16,49 @@ services:
 
   mysql:
     image: mysql:8.0.23
-    # user: "1000:1000"
     ports:
       - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: 123456
       MYSQL_DATABASE: tickdb
-    # volumes:
-      # - ./docker/schema.sql:/docker-entrypoint-initdb.d/1.sql
-    #   - ./docker/volumes/mysql:/var/lib/mysql
+    volumes:
+      - "./docker/schema.sql:/docker-entrypoint-initdb.d/1.sql"
+      - "./docker/data.sql:/docker-entrypoint-initdb.d/2.sql"
+      - "./docker/volumes/mysql:/var/lib/mysql"
 
   prometheus:
     image: prom/prometheus
-    # user: "1000:1000"
     ports:
       - "9090:9090"
     volumes:
-      - ./docker/prometheus.yaml:/etc/prometheus/prometheus.yaml
-      # - ./docker/volumes/prometheus:/prometheus
+      - "./docker/prometheus.yml:/etc/prometheus/prometheus.yml"
+      # - "./docker/volumes/prometheus:/prometheus"
 
   grafana:
     image: grafana/grafana
-    # user: "1000:1000"
+    user: 1000:1000
     ports:
       - "3000:3000"
-    # volumes:
-    #   - ./docker/volumes/grafana:/var/lib/grafana
-
+    volumes:
+      - "./docker/volumes/grafana:/var/lib/grafana"
+  
   app:
-    build: appfastapi
+    build: app
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=root
+      - DB_PASSWORD=123456
+      - DB_DATABASENAME=tickdb
     ports:
       - "8000:8000"
+    deploy:
+      resources:
+        reservations:
+          cpus: 0.5
+          memory: 512M  
+        limits:
+          cpus: 1
+          memory: 1024M
+    depends_on:
+      - mysql
